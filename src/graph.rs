@@ -1,78 +1,80 @@
-use fnv::FnvHashMap;
-use std::cell::Cell;
-use std::rc::Rc;
+use fnv::{FnvHashMap, FnvHashSet};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use definitions::*;
 use module::Module;
 
-#[derive(Clone)]
-pub struct Input(Rc<Cell<Chunk>>);
-impl Input {
-    pub fn get(&self) -> Chunk {
-        self.0.as_ref().get()
-    }
-}
-impl<'a> From<&'a Output> for Input {
-    fn from(o: &'a Output) -> Input {
-        Input(o.0.clone())
-    }
-}
-
-#[derive(Clone)]
-pub struct Output(Rc<Cell<Chunk>>);
-impl Output {
-    pub fn put(&self, val: Chunk) {
-        self.0.set(val)
-    }
-}
-
 static NEXT_ID : AtomicUsize = AtomicUsize::new(0);
-fn new_id() -> usize {
-    NEXT_ID.fetch_add(1, Ordering::Relaxed)
+fn new_id() -> ModuleId {
+    ModuleId(NEXT_ID.fetch_add(1, Ordering::SeqCst))
 }
 
 struct Node {
-    module:  Box<Module>,
-    inputs:  Vec<Input>,
-    outputs: Vec<Output>,
+    module: Box<Module>,
+    input:  Vec<Chunk>,
+    output: Vec<Chunk>,
+}
+
+#[derive(PartialEq, Eq, Hash)]
+struct Connection {
+    src: PortAddr,
+    dst: PortAddr,
 }
 
 pub struct Graph {
-    nodes: FnvHashMap<usize, Node>,
-    buf: Vec<Chunk>,
-    null_input: Input,
-    null_output: Output,
+    nodes: FnvHashMap<ModuleId, Node>,
+    connections : FnvHashSet<Connection>,
 }
 
 impl Graph {
     pub fn new() -> Self {
         Graph {
             nodes: FnvHashMap::default(),
-            buf: vec![Chunk::default(); 16],
-            null_input: Input(Rc::new(Cell::new(Chunk::default()))),
-            null_output: Output(Rc::new(Cell::new(Chunk::default()))),
+            connections: FnvHashSet::default(),
         }
     }
-    pub fn add_module<M: Module + 'static>(&mut self, module: M) -> usize {
-        let module = Box::new(module);
-        let inputs = vec![self.null_input.clone(); module.num_inputs()];
-        let outputs = vec![self.null_output.clone(); module.num_outputs()];
-        let node = Node { module, inputs, outputs };
+    pub fn insert_module<M: Module + 'static>(&mut self, module: M) -> ModuleId {
         let id = new_id();
-        self.nodes.insert(id, node);
+        println!("{:?}", id);
+        let module = Box::new(module);
+        let input  = vec![Chunk::default(); module.num_inputs()];
+        let output = vec![Chunk::default(); module.num_outputs()];
+        let node = Node {
+            module, input, output
+        };
+        assert!(self.nodes.insert(id, node).is_none());
         id
     }
-    pub fn connect(&mut self, src: PortSpec, dst: PortSpec) -> Result<()> {
-        let src_module = self.nodes.remove(&src.0).ok_or(err_msg("Source module not found"))?;
-        let dst_module = self.nodes.get_mut(&dst.0).ok_or(err_msg("Destination module not found"))?;
-        dst_module.inputs[dst.1] = Input::from(&src_module.outputs[src.1]);
-        self.nodes.insert(src.0, src_module);
-        Ok(())
+    pub fn remove_module(&mut self, id: ModuleId) -> Result<()> {
+        if self.nodes.remove(&id).is_some() {
+            self.connections.retain(|&Connection{src, dst}| src.0 != id && dst.0 != id);
+            Ok(())
+        } else {
+            Err(err_msg("No Module with that Id exists."))
+        }
+    }
+    pub fn connect(&mut self, src: PortAddr, dst: PortAddr) -> Result<()> {
+        if self.connections.insert(Connection {src, dst}) {
+            Ok(())
+        } else {
+            Err(err_msg("Connection already exists."))
+        }
+    }
+    pub fn disconnect(&mut self, src: PortAddr, dst: PortAddr) -> Result<()> {
+        if self.connections.remove(&Connection {src, dst}) {
+            Ok(())
+        } else {
+            Err(err_msg("Connection does not exist."))
+        }
     }
     pub fn run(&mut self) {
         for n in self.nodes.values_mut() {
-            n.module.run(&n.inputs, &n.outputs);
+            n.module.process_chunks(&n.input, &mut n.output);
+        }
+        for &Connection{src, dst} in &self.connections {
+            let chunk = self.nodes.get(&src.0).unwrap().output[src.1];
+            let dst_node = self.nodes.get_mut(&dst.0).unwrap();
+            dst_node.input[dst.1] = chunk;
         }
     }
 }

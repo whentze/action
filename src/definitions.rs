@@ -1,8 +1,12 @@
 pub use failure::{Error, err_msg};
 
-pub const SAMPLE_RATE : f64 = 96_000.0;
-pub const CHUNK_SIZE : usize = 2;
+pub const SAMPLE_RATE : f32 = 96_000.0;
 pub type Sample = f32;
+pub const CHUNK_SIZE : usize = 16;
 pub type Chunk = [Sample; CHUNK_SIZE];
-pub type PortSpec = (usize, usize);
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub struct ModuleId(pub usize);
+pub type Port = usize;
+pub type PortAddr = (ModuleId, Port);
 pub type Result<T> = ::std::result::Result<T, Error>;

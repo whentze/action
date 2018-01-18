@@ -5,15 +5,15 @@ use action::graph::*;
 
 fn main() {
     let mut graph = Graph::new();
-    let sine    = graph.add_module(Sine::default());
-    let printer = graph.add_module(Printer::default());
+    let sine    = graph.insert_module(Sine::default());
+    let printer = graph.insert_module(Printer::default());
 
-    let mut last : usize;
+    let mut last;
     let mut next = sine;
     for _ in 0..1000 {
         last = next;
-        next = graph.add_module(Id::default());
-        let mid = graph.add_module(Id::default());
+        next = graph.insert_module(Id::default());
+        let mid = graph.insert_module(Id::default());
         graph.connect((last, 0), (mid, 0)).unwrap();
         graph.connect((mid, 0), (next, 0)).unwrap();
     }

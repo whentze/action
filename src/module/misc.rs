@@ -1,78 +1,65 @@
-// modules for testing the graph implementation
+// example modules for testing the graph implementation
 
 use byteorder::{LittleEndian, WriteBytesExt};
 use std::io::stdout;
-use std::f64::consts::PI;
-
+use std::f32::consts::PI;
 use definitions::*;
-use graph::{Input, Output};
-use module::Module;
+use module::{Input, Output, Module};
 
-#[derive(Default)]
+#[derive(Default, Debug, Clone)]
 pub struct Sine {
-    phase: f64,
+    phase : f32,
 }
+
 impl Module for Sine {
-    fn num_inputs(&self)  -> usize { 0 }
+    fn num_inputs(&self) -> usize { 0 }
+
     fn num_outputs(&self) -> usize { 1 }
-    fn run(&mut self, _: &[Input], o: &[Output]) {
-        let mut buf = Chunk::default();
-        for i in 0..CHUNK_SIZE {
-            buf[i] = (2.0*PI*self.phase).sin() as Sample;
-            self.phase += 110.0/SAMPLE_RATE;
-        }
-        o[0].put(buf);
+
+    fn process_samples(&mut self, _: &Input, output: &mut Output) {
+        output[0] = self.phase.sin();
+        self.phase = (self.phase + 440.0/SAMPLE_RATE) % (PI * 2.0);
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug, Clone)]
 pub struct Id {}
 impl Module for Id {
     fn num_inputs(&self)  -> usize { 1 }
     fn num_outputs(&self) -> usize { 1 }
-    fn run(&mut self, i: &[Input], o: &[Output]) {
-        o[0].put(i[0].get())
+    fn process_samples(&mut self, i: &Input, o: &mut Output)  {
+        o[0] = i[0];
     }
 }
 
-#[derive(Default)]
-pub struct Adder {
-    buf: Chunk,
-}
-impl Module for Adder {
+#[derive(Default, Debug, Clone)]
+pub struct Mixer {}
+impl Module for Mixer {
     fn num_inputs(&self)  -> usize { 8 }
     fn num_outputs(&self) -> usize { 1 }
-    fn run(&mut self, i: &[Input], o: &[Output]) {
-        o[0].put(i.iter().map(|x| x.get()).fold(Chunk::default(), |l, r| {
-            let mut buf = Chunk::default();
-            for i in 0..CHUNK_SIZE {
-                buf[i] = l[i] + r[i];
-            }
-            buf
-        }));
+    fn process_samples(&mut self, i: &Input, o: &mut Output)  {
+        o[0] = (0..8).map(|x| i[x]).sum()
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug, Clone)]
 pub struct Splitter {}
 impl Module for Splitter {
     fn num_inputs(&self)  -> usize { 1 }
     fn num_outputs(&self) -> usize { 8 }
-    fn run(&mut self, i: &[Input], o: &[Output]) {
-        for x in o.iter() {
-            x.put(i[0].get())
+    fn process_samples(&mut self, i: &Input, o: &mut Output) {
+        for x in 0..8 {
+            o[x] = i[0];
         }
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug, Clone)]
 pub struct Printer {}
 impl Module for Printer {
     fn num_inputs(&self)  -> usize { 1 }
     fn num_outputs(&self) -> usize { 0 }
-    fn run(&mut self, i: &[Input], _: &[Output]) {
-        for f in i[0].get().iter() {
-            stdout().write_f32::<LittleEndian>(*f).unwrap();
-        }
+    fn process_samples(&mut self, i: &Input, _: &mut Output) {
+        stdout().write_f32::<LittleEndian>(i[0]).unwrap();
     }
 }
