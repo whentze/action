@@ -5,7 +5,7 @@ use action::graph::*;
 
 fn main() {
     let mut graph = Graph::new();
-    let sine    = graph.insert_module(Sine::default());
+    let sine    = graph.insert_module(Sine::with_freq(220.0));
     let printer = graph.insert_module(PortAudioOut::default());
 
     graph.connect((sine, 0), (printer, 0)).unwrap();
