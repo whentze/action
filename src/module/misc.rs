@@ -71,3 +71,13 @@ impl Module for Sink {
     fn num_outputs(&self) -> usize { 0 }
     fn process_samples(&mut self, _: &Input, _: &mut Output) {}
 }
+
+#[derive(Default, Debug, Clone)]
+pub struct TimeWaster {}
+impl Module for TimeWaster {
+    fn num_inputs(&self)  -> usize { 1 }
+    fn num_outputs(&self) -> usize { 1 }
+    fn process_samples(&mut self, i: &Input, o: &mut Output) {
+        o[0] = (0..100u16).map(|n| (n as f32*PI).sin()).sum::<f32>() + i[0]
+    }
+}

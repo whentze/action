@@ -153,3 +153,23 @@ fn throughput_grid(b: &mut Bencher) {
         }
     });
 }
+
+// Sine -> Waster1 -> ... -> Waster10 -> Sink
+#[bench]
+fn throughput_expensive(b: &mut Bencher) {
+    let mut graph = Graph::new();
+    let sine = graph.insert_module(Sine::default());
+    let sink = graph.insert_module(Sink::default());
+    let mut next = sine;
+    for _ in 0..10 {
+        let last = next;
+        next = graph.insert_module(TimeWaster::default());
+        graph.connect((last, 0), (next, 0)).unwrap();
+    }
+    graph.connect((next, 0), (sink, 0)).unwrap();
+    b.iter(|| {
+        for _ in 0..CHUNKS_PER_MS {
+            graph.run();
+        }
+    });
+}

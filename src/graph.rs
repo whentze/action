@@ -1,4 +1,6 @@
-use fnv::{FnvHashMap, FnvHashSet};
+use rayon::prelude::*;
+use rayon_hash::{HashMap, HashSet};
+use fnv::FnvBuildHasher;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use definitions::*;
@@ -22,15 +24,15 @@ struct Connection {
 }
 
 pub struct Graph {
-    nodes: FnvHashMap<ModuleId, Node>,
-    connections : FnvHashSet<Connection>,
+    nodes: HashMap<ModuleId, Node, FnvBuildHasher>,
+    connections : HashSet<Connection, FnvBuildHasher>,
 }
 
 impl Graph {
     pub fn new() -> Self {
         Graph {
-            nodes: FnvHashMap::default(),
-            connections: FnvHashSet::default(),
+            nodes: HashMap::with_hasher(Default::default()),
+            connections: HashSet::with_hasher(Default::default()),
         }
     }
     pub fn insert_module<M: Module + 'static>(&mut self, module: M) -> ModuleId {
@@ -67,9 +69,9 @@ impl Graph {
         }
     }
     pub fn run(&mut self) {
-        for n in self.nodes.values_mut() {
+        self.nodes.par_values_mut().for_each(|n| {
             n.module.process_chunks(&n.input, &mut n.output);
-        }
+        });
         for &Connection{src, dst} in &self.connections {
             let chunk = self.nodes.get(&src.0).unwrap().output[src.1];
             let dst_node = self.nodes.get_mut(&dst.0).unwrap();

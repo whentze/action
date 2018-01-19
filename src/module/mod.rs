@@ -33,7 +33,7 @@ impl<'a> IndexMut<usize> for Output<'a> {
     }
 }
 
-pub trait Module : Duplicate {
+pub trait Module : Duplicate + Send + Sync {
     fn num_inputs(&self) -> usize;
     fn num_outputs(&self) -> usize;
     fn process_samples(&mut self, input: &Input, output: &mut Output);
