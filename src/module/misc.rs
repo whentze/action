@@ -63,3 +63,11 @@ impl Module for Printer {
         stdout().write_f32::<LittleEndian>(i[0]).unwrap();
     }
 }
+
+#[derive(Default, Debug, Clone)]
+pub struct Sink {}
+impl Module for Sink {
+    fn num_inputs(&self)  -> usize { 1 }
+    fn num_outputs(&self) -> usize { 0 }
+    fn process_samples(&mut self, i: &Input, _: &mut Output) {}
+}
