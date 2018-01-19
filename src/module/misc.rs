@@ -69,5 +69,5 @@ pub struct Sink {}
 impl Module for Sink {
     fn num_inputs(&self)  -> usize { 1 }
     fn num_outputs(&self) -> usize { 0 }
-    fn process_samples(&mut self, i: &Input, _: &mut Output) {}
+    fn process_samples(&mut self, _: &Input, _: &mut Output) {}
 }
