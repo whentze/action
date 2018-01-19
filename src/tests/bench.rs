@@ -118,3 +118,38 @@ fn throughput_splittree(b: &mut Bencher) {
         }
     });
 }
+
+// Sine -> Mixer00 -> ... -> Mixer90
+//          v                 v
+//         ...               ...
+//          v                 v
+//         Mixer09 -> ... -> Mixer99 -> Sink
+#[bench]
+fn throughput_grid(b: &mut Bencher) {
+    let mut graph = Graph::new();
+
+    let mut mixers = vec![Vec::new(); 10];
+    for x in 0..10 {
+        for _ in 0..10 {
+            mixers[x].push(graph.insert_module(Mixer::default()));
+        }
+        for pair in mixers[x].windows(2) {
+            graph.connect((pair[0], 0), (pair[1], 0)).unwrap();
+        }
+    }
+    for pair in mixers.windows(2) {
+        for y in 0..10 {
+            graph.connect((pair[0][y], 0), (pair[1][y], 1)).unwrap();
+        }
+    }
+    let sine = graph.insert_module(Sine::default());
+    let sink = graph.insert_module(Sink::default());
+    graph.connect((sine, 0), (mixers[0][0], 0)).unwrap();
+    graph.connect((mixers[9][9], 0), (sink, 0)).unwrap();
+
+    b.iter(|| {
+        for _ in 0..CHUNKS_PER_MS {
+            graph.run();
+        }
+    });
+}
