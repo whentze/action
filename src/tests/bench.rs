@@ -76,7 +76,42 @@ fn throughput_mixtree(b: &mut Bencher) {
     }
     let sink = graph.insert_module(Sink::default());
     graph.connect((final_mixer, 0), (sink, 0)).unwrap();
-    
+
+    b.iter(|| {
+        for _ in 0..CHUNKS_PER_MS {
+            graph.run();
+        }
+    });
+}
+
+//                                    /-> Sink1
+//                                    /-> Sink2
+//                    /-> Splitter2 --    ...
+//                    /->             \-> Sink7
+//                    /->             \-> Sink8
+//                    /->
+//Sine -> Splitter1 --    ...          ...
+//                    \->
+//                    \->             /-> Sink56
+//                    \->             /-> Sink57
+//                    \-> Splitter9 -- ...
+//                                    \-> Sink63
+//                                    \-> Sink64
+#[bench]
+fn throughput_splittree(b: &mut Bencher) {
+    let mut graph = Graph::new();
+    let sine = graph.insert_module(Sine::default());
+    let first_splitter = graph.insert_module(Splitter::default());
+    graph.connect((sine, 0), (first_splitter, 0)).unwrap();
+    for i in 0..8 {
+        let splitter = graph.insert_module(Splitter::default());
+        graph.connect((first_splitter, i), (splitter, 0)).unwrap();
+        for j in 0..8 {
+            let sink = graph.insert_module(Sink::default());
+            graph.connect((splitter, j), (sink, 0)).unwrap();
+        }
+    }
+
     b.iter(|| {
         for _ in 0..CHUNKS_PER_MS {
             graph.run();
