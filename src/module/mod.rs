@@ -39,18 +39,14 @@ pub trait Module : Duplicate {
     fn process_samples(&mut self, input: &Input, output: &mut Output);
 
     fn process_chunks(&mut self, input: &Vec<Chunk>, output: &mut Vec<Chunk>) {
-        let mut input = Input {
-            chunks: input,
-            offset: 0,
-        };
-        let mut output = Output {
-            chunks: output,
-            offset: 0,
-        };
         for i in 0..CHUNK_SIZE {
-            input.offset = i;
-            output.offset = i;
-            self.process_samples(&input, &mut output);
+            self.process_samples(&Input {
+                chunks: input,
+                offset: i,
+            }, &mut Output {
+                chunks: output,
+                offset: i,
+            });
         }
     }
 }
