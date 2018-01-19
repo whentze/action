@@ -3,6 +3,7 @@
 extern crate byteorder;
 extern crate failure;
 extern crate fnv;
+extern crate portaudio;
 
 mod definitions;
 pub mod graph;
