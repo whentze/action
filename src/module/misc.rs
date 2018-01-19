@@ -17,8 +17,8 @@ impl Module for Sine {
     fn num_outputs(&self) -> usize { 1 }
 
     fn process_samples(&mut self, _: &Input, output: &mut Output) {
-        output[0] = self.phase.sin();
-        self.phase = (self.phase + 440.0/SAMPLE_RATE) % (PI * 2.0);
+        output[0] = (self.phase * 2.0 * PI).sin();
+        self.phase = (self.phase + 440.0/SAMPLE_RATE) % 1.0;
     }
 }
 
