@@ -35,7 +35,6 @@ impl Graph {
     }
     pub fn insert_module<M: Module + 'static>(&mut self, module: M) -> ModuleId {
         let id = new_id();
-        println!("{:?}", id);
         let module = Box::new(module);
         let input  = vec![Chunk::default(); module.num_inputs()];
         let output = vec![Chunk::default(); module.num_outputs()];
