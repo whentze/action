@@ -13,9 +13,7 @@ fn main() {
     for _ in 0..1000 {
         last = next;
         next = graph.insert_module(Id::default());
-        let mid = graph.insert_module(Id::default());
-        graph.connect((last, 0), (mid, 0)).unwrap();
-        graph.connect((mid, 0), (next, 0)).unwrap();
+        graph.connect((last, 0), (next, 0)).unwrap();
     }
     graph.connect((next, 0), (printer, 0)).unwrap();
 
