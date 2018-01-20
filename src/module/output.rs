@@ -38,7 +38,7 @@ impl Module for PortAudioOut {
     fn num_inputs(&self)  -> usize { 1 }
     fn num_outputs(&self) -> usize { 0 }
 
-    fn process_samples(&mut self, i: &Input, _: &mut Output) { }
+    fn process_samples(&mut self, _: &Input, _: &mut Output) { }
     fn process_chunks(&mut self, input: &Vec<Chunk>, _: &mut Vec<Chunk>) {
         self.buffer[self.chunks_stored] = input[0];
         self.chunks_stored += 1;
