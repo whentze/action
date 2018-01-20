@@ -12,9 +12,9 @@ use definitions::*;
 // Therefore, the aim is to keep every result well below 1,000,000 ns/iter.
 
 // How many samples do we have to produce per millisecond?
-const SAMPLES_PER_MS: usize = (SAMPLE_RATE as usize)/1000;
+const SAMPLES_PER_MS: usize = (SAMPLE_RATE as usize) / 1000;
 // How many chunks do we have to produce per millisecond?
-const CHUNKS_PER_MS:  usize = SAMPLES_PER_MS/CHUNK_SIZE;
+const CHUNKS_PER_MS: usize = SAMPLES_PER_MS / CHUNK_SIZE;
 
 // Sine -> Sink
 #[bench]

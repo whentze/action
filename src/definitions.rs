@@ -1,8 +1,8 @@
-pub use failure::{Error, err_msg};
+pub use failure::{err_msg, Error};
 
-pub const SAMPLE_RATE : f32 = 96_000.0;
+pub const SAMPLE_RATE: f32 = 96_000.0;
 pub type Sample = f32;
-pub const CHUNK_SIZE : usize = 16;
+pub const CHUNK_SIZE: usize = 30;
 pub type Chunk = [Sample; CHUNK_SIZE];
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
