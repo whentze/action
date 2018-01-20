@@ -4,6 +4,7 @@ mod output;
 pub use self::output::*;
 
 use definitions::*;
+use std::fmt::Debug;
 use std::ops::{Index, IndexMut};
 
 pub struct Input<'a> {
@@ -35,7 +36,7 @@ impl<'a> IndexMut<usize> for Output<'a> {
     }
 }
 
-pub trait Module: Duplicate {
+pub trait Module: Duplicate + Debug {
     fn num_inputs(&self) -> usize;
     fn num_outputs(&self) -> usize;
     fn process_samples(&mut self, input: &Input, output: &mut Output);

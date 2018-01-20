@@ -1,6 +1,7 @@
 use portaudio as pa;
 use definitions::*;
 use module::*;
+use std::fmt;
 
 const BUFFER_SIZE: usize = 32;
 
@@ -8,6 +9,17 @@ pub struct PortAudioOut {
     buffer: [Chunk; BUFFER_SIZE],
     chunks_stored: usize,
     stream: pa::Stream<pa::Blocking<pa::stream::Buffer>, pa::Output<f32>>,
+}
+
+// No Debug impl on pa::Stream so we have to do this manually, grr
+impl fmt::Debug for PortAudioOut {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("PortAudioOut")
+            .field("buffer", &self.buffer)
+            .field("chunks_stored", &self.chunks_stored)
+            .field("stream", &(&self.stream as *const _))
+            .finish()
+    }
 }
 
 impl Duplicate for PortAudioOut {

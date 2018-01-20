@@ -9,18 +9,20 @@ fn new_id() -> ModuleId {
     ModuleId(NEXT_ID.fetch_add(1, Ordering::SeqCst))
 }
 
+#[derive(Debug)]
 struct Node {
     module: Box<Module>,
     input: Vec<Chunk>,
     output: Vec<Chunk>,
 }
 
-#[derive(PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash)]
 struct Connection {
     src: PortAddr,
     dst: PortAddr,
 }
 
+#[derive(Debug)]
 pub struct Graph {
     nodes: FnvHashMap<ModuleId, Node>,
     connections: FnvHashSet<Connection>,
@@ -74,7 +76,7 @@ impl Graph {
             n.module.process_chunks(&n.input, &mut n.output);
         }
         for &Connection { src, dst } in &self.connections {
-            let chunk = self.nodes.get(&src.0).unwrap().output[src.1];
+            let chunk = self.nodes[&src.0].output[src.1];
             let dst_node = self.nodes.get_mut(&dst.0).unwrap();
             dst_node.input[dst.1] = chunk;
         }
