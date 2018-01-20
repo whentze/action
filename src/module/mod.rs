@@ -8,7 +8,7 @@ use std::fmt::Debug;
 use std::ops::{Index, IndexMut};
 
 pub struct Input<'a> {
-    chunks: &'a Vec<Chunk>,
+    chunks: &'a [Chunk],
     offset: usize,
 }
 
@@ -20,7 +20,7 @@ impl<'a> Index<usize> for Input<'a> {
 }
 
 pub struct Output<'a> {
-    chunks: &'a mut Vec<Chunk>,
+    chunks: &'a mut [Chunk],
     offset: usize,
 }
 
@@ -41,7 +41,7 @@ pub trait Module: Duplicate + Debug {
     fn num_outputs(&self) -> usize;
     fn process_samples(&mut self, input: &Input, output: &mut Output);
 
-    fn process_chunks(&mut self, input: &Vec<Chunk>, output: &mut Vec<Chunk>) {
+    fn process_chunks(&mut self, input: &[Chunk], output: &mut[Chunk]) {
         for i in 0..CHUNK_SIZE {
             self.process_samples(
                 &Input {
