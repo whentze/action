@@ -58,6 +58,16 @@ impl Graph {
         }
     }
     pub fn connect(&mut self, src: PortAddr, dst: PortAddr) -> Result<()> {
+        let src_node = self.nodes.get(&src.0)
+            .ok_or_else(|| err_msg(format!("No module with id {:?} exists.", src.0)))?;
+        if src_node.module.num_outputs() <= src.1 {
+            return Err(err_msg("Port number for input module is too high."));
+        }
+        let dst_node = self.nodes.get(&dst.0)
+            .ok_or_else(|| err_msg(format!("No module with id {:?} exists.", dst.0)))?;
+        if dst_node.module.num_inputs() <= dst.1 {
+            return Err(err_msg("Port number for output module is too high."));
+        }
         if self.connections.insert(Connection { src, dst }) {
             Ok(())
         } else {
