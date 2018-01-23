@@ -2,3 +2,7 @@
 /target/
 **/*.rs.bk
 Cargo.lock
+.idea/
+cachegrind.out*
+callgrind.out*
+perf.data
