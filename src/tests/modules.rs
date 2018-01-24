@@ -14,12 +14,6 @@ pub struct Sine {
     phase: f32,
 }
 
-impl Sine {
-    pub fn with_freq(freq: f32) -> Self {
-        Sine { freq, phase: 0.0 }
-    }
-}
-
 impl Module for Sine {
     fn num_inputs(&self) -> usize {
         0
