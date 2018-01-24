@@ -1,6 +1,5 @@
 use petgraph::graph::{DiGraph, NodeIndex, EdgeIndex};
 use petgraph::Direction;
-use petgraph::visit::EdgeRef;
 use definitions::*;
 use module::Module;
 
