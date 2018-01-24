@@ -1,7 +1,6 @@
 extern crate test;
 use self::test::Bencher;
 
-use module::Sine;
 use tests::modules::*;
 use graph::*;
 use definitions::*;

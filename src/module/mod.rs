@@ -1,7 +1,7 @@
-mod misc;
-pub use self::misc::*;
 mod output;
 pub use self::output::*;
+mod oscillator;
+pub use self::oscillator::*;
 
 use definitions::*;
 use std::fmt::Debug;
