@@ -1,42 +1,27 @@
-use fnv::{FnvHashMap, FnvHashSet};
-use std::sync::atomic::{AtomicUsize, Ordering};
-
+use petgraph::graph::{DiGraph, NodeIndex, EdgeIndex};
+use petgraph::Direction;
+use petgraph::visit::EdgeRef;
 use definitions::*;
 use module::Module;
-
-static NEXT_ID: AtomicUsize = AtomicUsize::new(0);
-fn new_id() -> ModuleId {
-    ModuleId(NEXT_ID.fetch_add(1, Ordering::SeqCst))
-}
 
 #[derive(Debug)]
 struct Node {
     module: Box<Module>,
-    input: Vec<Chunk>,
+    input:  Vec<Chunk>,
     output: Vec<Chunk>,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
-struct Connection {
-    src: PortAddr,
-    dst: PortAddr,
-}
+pub type PortNum = usize;
+pub type PortAddr = (NodeIndex, PortNum);
 
-#[derive(Debug)]
-pub struct Graph {
-    nodes: FnvHashMap<ModuleId, Node>,
-    connections: FnvHashSet<Connection>,
-}
+#[derive(Default, Debug)]
+pub struct Graph(DiGraph<Node, (PortNum, PortNum)>);
 
 impl Graph {
     pub fn new() -> Self {
-        Graph {
-            nodes: FnvHashMap::default(),
-            connections: FnvHashSet::default(),
-        }
+        Graph (DiGraph::with_capacity(128, 512))
     }
-    pub fn insert_module<M: Module + 'static>(&mut self, module: M) -> ModuleId {
-        let id = new_id();
+    pub fn insert_module<M: Module + 'static>(&mut self, module: M) -> NodeIndex {
         let module = Box::new(module);
         let input = vec![Chunk::default(); module.num_inputs()];
         let output = vec![Chunk::default(); module.num_outputs()];
@@ -45,50 +30,38 @@ impl Graph {
             input,
             output,
         };
-        assert!(self.nodes.insert(id, node).is_none());
-        id
+        self.0.add_node(node)
     }
-    pub fn remove_module(&mut self, id: ModuleId) -> Result<()> {
-        if self.nodes.remove(&id).is_some() {
-            self.connections
-                .retain(|&Connection { src, dst }| src.0 != id && dst.0 != id);
-            Ok(())
-        } else {
-            Err(err_msg("No Module with that Id exists."))
-        }
+    pub fn remove_module(&mut self, id: NodeIndex) -> Result<Box<Module>> {
+        self.0.remove_node(id).ok_or_else(|| err_msg("No Module with that Id exists.")
+        ).map(|node| node.module)
     }
-    pub fn connect(&mut self, src: PortAddr, dst: PortAddr) -> Result<()> {
-        let src_node = self.nodes.get(&src.0)
+    pub fn connect(&mut self, src: PortAddr, dst: PortAddr) -> Result<EdgeIndex> {
+        let src_node = self.0.node_weight(src.0)
             .ok_or_else(|| err_msg(format!("No module with id {:?} exists.", src.0)))?;
         if src_node.module.num_outputs() <= src.1 {
             return Err(err_msg("Port number for input module is too high."));
         }
-        let dst_node = self.nodes.get(&dst.0)
+        let dst_node = self.0.node_weight(dst.0)
             .ok_or_else(|| err_msg(format!("No module with id {:?} exists.", dst.0)))?;
         if dst_node.module.num_inputs() <= dst.1 {
             return Err(err_msg("Port number for output module is too high."));
         }
-        if self.connections.insert(Connection { src, dst }) {
-            Ok(())
-        } else {
-            Err(err_msg("Connection already exists."))
-        }
+        Ok(self.0.add_edge(src.0, dst.0, (src.1, dst.1)))
     }
-    pub fn disconnect(&mut self, src: PortAddr, dst: PortAddr) -> Result<()> {
-        if self.connections.remove(&Connection { src, dst }) {
-            Ok(())
-        } else {
-            Err(err_msg("Connection does not exist."))
-        }
+    pub fn disconnect(&mut self, edge: EdgeIndex) -> Result<(usize, usize)> {
+        self.0.remove_edge(edge).ok_or_else(|| err_msg("Edge to be removed does not exist."))
     }
     pub fn run(&mut self) {
-        for n in self.nodes.values_mut() {
-            n.module.process_chunks(&n.input, &mut n.output);
-        }
-        for &Connection { src, dst } in &self.connections {
-            let chunk = self.nodes[&src.0].output[src.1];
-            let dst_node = self.nodes.get_mut(&dst.0).unwrap();
-            dst_node.input[dst.1] = chunk;
+        for ni in self.0.node_indices() {
+            let node = self.0.node_weight_mut(ni).unwrap();
+            node.module.process_chunks(&node.input, &mut node.output);
+            let mut neighbors = self.0.neighbors_directed(ni, Direction::Outgoing).detach();
+            while let Some((edge, neighbor)) = neighbors.next(&self.0) {
+                let &(src_port, dst_port) = self.0.edge_weight(edge).unwrap();
+                let (src_node, dst_node) = self.0.index_twice_mut(ni, neighbor);
+                dst_node.input[dst_port] = src_node.output[src_port];
+            }
         }
     }
 }

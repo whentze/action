@@ -2,7 +2,7 @@
 
 extern crate byteorder;
 extern crate failure;
-extern crate fnv;
+extern crate petgraph;
 extern crate portaudio;
 
 mod definitions;
