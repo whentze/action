@@ -1,9 +1,9 @@
 extern crate test;
 use self::test::Bencher;
 
-use tests::modules::*;
-use graph::*;
 use definitions::*;
+use graph::*;
+use tests::modules::*;
 
 // The "throughput" benchmarks all construct some module graph and then
 // measure its throughput when run at full speed.

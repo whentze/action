@@ -41,7 +41,7 @@ pub trait Module: Duplicate + Debug {
     fn num_outputs(&self) -> usize;
     fn process_samples(&mut self, input: &Input, output: &mut Output);
 
-    fn process_chunks(&mut self, input: &[Chunk], output: &mut[Chunk]) {
+    fn process_chunks(&mut self, input: &[Chunk], output: &mut [Chunk]) {
         for i in 0..CHUNK_SIZE {
             self.process_samples(
                 &Input {

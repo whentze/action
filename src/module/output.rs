@@ -1,6 +1,6 @@
-use portaudio as pa;
 use definitions::*;
 use module::*;
+use portaudio as pa;
 use std::fmt;
 
 const BUFFER_SIZE: usize = 32;
@@ -59,7 +59,7 @@ impl Module for PortAudioOut {
     }
 
     fn process_samples(&mut self, _: &Input, _: &mut Output) {}
-    fn process_chunks(&mut self, input: &[Chunk], _: &mut[Chunk]) {
+    fn process_chunks(&mut self, input: &[Chunk], _: &mut [Chunk]) {
         self.buffer[self.chunks_stored] = input[0];
         self.chunks_stored += 1;
         if self.chunks_stored == BUFFER_SIZE {
