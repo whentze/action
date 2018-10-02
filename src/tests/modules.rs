@@ -2,10 +2,10 @@
 //! Most of these are useless for actual audio.
 
 use byteorder::{LittleEndian, WriteBytesExt};
-use definitions::SAMPLE_RATE;
-use module::{Input, Module, Output};
 use std::f32::consts::PI;
 use std::io::stdout;
+use module::{Input, Module, Output};
+use definitions::SAMPLE_RATE;
 
 /// A very simple sine wave generator
 #[derive(Default, Debug, Clone)]

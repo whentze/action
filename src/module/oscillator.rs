@@ -1,6 +1,6 @@
+use std::f32::consts::PI;
 use definitions::*;
 use module::{Input, Module, Output};
-use std::f32::consts::PI;
 
 #[derive(Default, Debug, Clone)]
 pub struct Oscillator {

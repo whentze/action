@@ -1,12 +1,12 @@
+use petgraph::graph::{DiGraph, NodeIndex, EdgeIndex};
+use petgraph::Direction;
 use definitions::*;
 use module::Module;
-use petgraph::graph::{DiGraph, EdgeIndex, NodeIndex};
-use petgraph::Direction;
 
 #[derive(Debug)]
 struct Node {
     module: Box<Module>,
-    input: Vec<Chunk>,
+    input:  Vec<Chunk>,
     output: Vec<Chunk>,
 }
 
@@ -18,7 +18,7 @@ pub struct Graph(DiGraph<Node, (PortNum, PortNum)>);
 
 impl Graph {
     pub fn new() -> Self {
-        Graph(DiGraph::with_capacity(128, 512))
+        Graph (DiGraph::with_capacity(128, 512))
     }
     pub fn insert_module<M: Module + 'static>(&mut self, module: M) -> NodeIndex {
         let module = Box::new(module);
@@ -32,20 +32,16 @@ impl Graph {
         self.0.add_node(node)
     }
     pub fn remove_module(&mut self, id: NodeIndex) -> Result<Box<Module>> {
-        self.0
-            .remove_node(id)
-            .ok_or_else(|| err_msg("No Module with that Id exists."))
-            .map(|node| node.module)
+        self.0.remove_node(id).ok_or_else(|| err_msg("No Module with that Id exists.")
+        ).map(|node| node.module)
     }
     pub fn connect(&mut self, src: PortAddr, dst: PortAddr) -> Result<EdgeIndex> {
-        let src_node = self.0
-            .node_weight(src.0)
+        let src_node = self.0.node_weight(src.0)
             .ok_or_else(|| err_msg(format!("No module with id {:?} exists.", src.0)))?;
         if src_node.module.num_outputs() <= src.1 {
             return Err(err_msg("Port number for input module is too high."));
         }
-        let dst_node = self.0
-            .node_weight(dst.0)
+        let dst_node = self.0.node_weight(dst.0)
             .ok_or_else(|| err_msg(format!("No module with id {:?} exists.", dst.0)))?;
         if dst_node.module.num_inputs() <= dst.1 {
             return Err(err_msg("Port number for output module is too high."));
@@ -53,9 +49,7 @@ impl Graph {
         Ok(self.0.add_edge(src.0, dst.0, (src.1, dst.1)))
     }
     pub fn disconnect(&mut self, edge: EdgeIndex) -> Result<(usize, usize)> {
-        self.0
-            .remove_edge(edge)
-            .ok_or_else(|| err_msg("Edge to be removed does not exist."))
+        self.0.remove_edge(edge).ok_or_else(|| err_msg("Edge to be removed does not exist."))
     }
     pub fn run(&mut self) {
         for ni in self.0.node_indices() {
