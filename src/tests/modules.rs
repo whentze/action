@@ -2,8 +2,8 @@
 //! Most of these are useless for actual audio.
 
 use byteorder::{LittleEndian, WriteBytesExt};
-use definitions::SAMPLE_RATE;
-use module::{Input, Module, Output};
+use crate::definitions::SAMPLE_RATE;
+use crate::module::{Input, Module, Output};
 use std::f32::consts::PI;
 use std::io::stdout;
 

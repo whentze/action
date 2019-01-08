@@ -1,5 +1,5 @@
-use definitions::*;
-use module::*;
+use crate::definitions::*;
+use crate::module::*;
 use portaudio as pa;
 use std::fmt;
 

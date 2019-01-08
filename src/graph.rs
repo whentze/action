@@ -1,5 +1,5 @@
-use definitions::*;
-use module::Module;
+use crate::definitions::*;
+use crate::module::Module;
 use petgraph::graph::{DiGraph, EdgeIndex, NodeIndex};
 use petgraph::Direction;
 

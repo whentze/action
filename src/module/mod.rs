@@ -3,7 +3,7 @@ pub use self::output::*;
 mod oscillator;
 pub use self::oscillator::*;
 
-use definitions::*;
+use crate::definitions::*;
 use std::fmt::Debug;
 use std::ops::{Index, IndexMut};
 

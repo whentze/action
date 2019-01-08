@@ -1,5 +1,5 @@
-use definitions::*;
-use module::{Input, Module, Output};
+use crate::definitions::*;
+use crate::module::{Input, Module, Output};
 use std::f32::consts::PI;
 
 #[derive(Default, Debug, Clone)]
